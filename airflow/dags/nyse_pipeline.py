@@ -1,12 +1,34 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
+import os
 
-def check_source_data():
-    print("Source data ready")
+DOWNLOAD_PATH = "/tmp/nyse_data"
 
-def start_pipeline():
-    print("Pipeline started")
+def download_data():
+
+    import kaggle
+
+    kaggle.api.authenticate()
+    kaggle.api.dataset_download_files('dgawlik/nyse', path= DOWNLOAD_PATH, unzip=True)
+
+def upload_to_s3():
+
+    import boto3
+    import os
+
+    s3_client = boto3.client('s3')
+    
+    for file_name in os.listdir(DOWNLOAD_PATH):
+        file_path = os.path.join(DOWNLOAD_PATH, file_name)
+        s3_client.upload_file(file_path, 'nyse-market-pipeline-raw-data', file_name)
+        print(f"Uploaded {file_name} to S3")    
+
+def run_spark():
+    pass
+
+def run_dbt():
+    pass
 
 with DAG(
     dag_id="nyse_pipeline",
@@ -14,13 +36,25 @@ with DAG(
     schedule_interval = None,
     catchup= False) as dag:
 
-    task_1 = PythonOperator(
-        task_id="task_1",
-        python_callable=check_source_data
-    )
-    task_2 = PythonOperator(
-        task_id="task_2",
-        python_callable=start_pipeline
+    download_data_task = PythonOperator(
+        task_id="download_data",
+        python_callable=download_data
     )
 
-    task_1 >> task_2
+    upload_to_s3_task = PythonOperator(
+        task_id="upload_to_s3",
+        python_callable=upload_to_s3
+    )
+
+    run_spark_task = PythonOperator(
+        task_id="run_spark",
+        python_callable=run_spark
+    )
+
+    run_dbt_task = PythonOperator(
+        task_id="run_dbt",
+        python_callable=run_dbt
+    )
+
+
+    download_data_task >> upload_to_s3_task >> run_spark_task >> run_dbt_task
