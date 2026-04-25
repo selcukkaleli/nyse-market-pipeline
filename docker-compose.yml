@@ -80,6 +80,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/plugins:/opt/airflow/plugins
     - ~/.aws:/home/airflow/.aws:ro
+    - /var/run/docker.sock:/var/run/docker.sock 
+    
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -103,6 +105,19 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+
+  spark:
+    build: ./spark
+    container_name: spark-job
+    entrypoint: ["/opt/spark/bin/spark-submit"]  # ← bunu ekle
+    volumes:
+      - ./spark:/opt/spark/work
+      - ~/.aws:/root/.aws:ro
+    environment:
+      - SPARK_DRIVER_MEMORY=4g
+      - SPARK_EXECUTOR_MEMORY=4g
+    profiles:
+      - spark
 
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
@@ -289,3 +304,5 @@ services:
 
 volumes:
   postgres-db-volume:
+
+

@@ -1,3 +1,2 @@
 FROM apache/airflow:2.10.5
-RUN pip install --no-cache-dir kaggle
-RUN pip install --no-cache-dir kaggle boto3
+RUN pip install --no-cache-dir kaggle boto3 apache-airflow-providers-docker

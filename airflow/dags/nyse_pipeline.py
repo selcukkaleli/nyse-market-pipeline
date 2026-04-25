@@ -2,20 +2,20 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 import os
+from airflow.providers.docker.operators.docker import DockerOperator
+import kaggle
+import boto3
+import os
+from docker.types import Mount
 
 DOWNLOAD_PATH = "/tmp/nyse_data"
 
 def download_data():
 
-    import kaggle
-
     kaggle.api.authenticate()
     kaggle.api.dataset_download_files('dgawlik/nyse', path= DOWNLOAD_PATH, unzip=True)
 
 def upload_to_s3():
-
-    import boto3
-    import os
 
     s3_client = boto3.client('s3')
     
@@ -23,9 +23,6 @@ def upload_to_s3():
         file_path = os.path.join(DOWNLOAD_PATH, file_name)
         s3_client.upload_file(file_path, 'nyse-market-pipeline-raw-data', file_name)
         print(f"Uploaded {file_name} to S3")    
-
-def run_spark():
-    pass
 
 def run_dbt():
     pass
@@ -46,9 +43,28 @@ with DAG(
         python_callable=upload_to_s3
     )
 
-    run_spark_task = PythonOperator(
+    run_spark_task = DockerOperator(
         task_id="run_spark",
-        python_callable=run_spark
+        image="nyse-market-pipeline-spark:latest",
+        entrypoint="/opt/spark/bin/spark-submit",
+        command="/opt/spark/work/stocks_enriched.py",
+        mount_tmp_dir=False,
+        mounts=[
+            Mount(source="/Users/selcukkaleli/nyse-market-pipeline/spark", 
+                target="/opt/spark/work", 
+                type="bind"),
+            Mount(source="/Users/selcukkaleli/.aws", 
+                target="/root/.aws", 
+                type="bind",
+                read_only=True),
+        ],
+        environment={
+            "SPARK_DRIVER_MEMORY": "4g",
+            "SPARK_EXECUTOR_MEMORY": "4g"
+        },
+        docker_url="unix://var/run/docker.sock",
+        auto_remove="success",
+        dag=dag
     )
 
     run_dbt_task = PythonOperator(
