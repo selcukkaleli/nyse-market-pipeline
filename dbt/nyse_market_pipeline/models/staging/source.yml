@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: nyse
+    database: awsdatacatalog
+    schema: nyse_analytics
+    tables:
+      - name: stocks_enriched
