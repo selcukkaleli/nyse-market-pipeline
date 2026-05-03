@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: int_stock_metrics
+    description: "Staging'den türetilen hesaplanmış metrikler. Her satır bir şirketin bir yıla ait performans ve temel verilerini içerir."
+    columns:
+      - name: symbol
+        description: "Şirketin borsa kodu"
+        tests:
+          - not_null
+
+      - name: stock_year
+        description: "Yıl"
+        tests:
+          - not_null
+
+      - name: company_name
+        description: "Şirket adı"
+        tests:
+          - not_null
+
+      - name: sector
+        description: "Şirketin sektörü"
+        tests:
+          - not_null
+
+      - name: yearly_return
+        description: "(last_close - first_close) / first_close. Yıllık fiyat getirisi."
+        tests:
+          - not_null
+
+      - name: volatility
+        description: "avg_daily_range / first_close. Normalize edilmiş günlük volatilite."
+        tests:
+          - not_null
+
+      - name: risk_adj_return
+        description: "yearly_return / volatility. Sharpe proxy — birim risk başına getiri."
+
+      - name: debt_to_equity
+        description: "long_term_debt / total_equity. Finansal kaldıraç göstergesi."

@@ -13,6 +13,7 @@ final as (
 
     from source
 
+    ORDER BY company_name ASC, stock_year ASC
 )
 
 select * from final

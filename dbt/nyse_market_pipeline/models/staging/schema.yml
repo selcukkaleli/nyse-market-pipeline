@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_stocks_enriched
+    description: "Ham stocks_enriched tablosunun temizlenmiş ve yeniden adlandırılmış versiyonu."
+    columns:
+      - name: symbol
+        description: "Şirketin borsa kodu"
+        tests:
+          - not_null
+
+      - name: stock_year
+        description: "Verinin ait olduğu yıl"
+        tests:
+          - not_null
+
+      - name: first_close
+        description: "Yılın ilk kapanış fiyatı"
+        tests:
+          - not_null
+
+      - name: last_close
+        description: "Yılın son kapanış fiyatı"
+        tests:
+          - not_null
+
+      - name: avg_daily_range
+        description: "Ortalama günlük fiyat aralığı"
+        tests:
+          - not_null
+
+      - name: sector
+        description: "Şirketin sektörü"
+        tests:
+          - not_null
+
+      - name: company_name
+        description: "Şirket adı"
+        tests:
+          - not_null

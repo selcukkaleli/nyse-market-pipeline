@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: mart_sector_performance
+    description: "Sektör bazında ortalama getiri, volatilite ve risk-adjusted return. Her satır bir sektörü temsil eder."
+    columns:
+      - name: sector
+        description: "Sektör adı"
+        tests:
+          - not_null
+          - unique
+
+      - name: avg_yearly_return
+        description: "Sektördeki şirketlerin ortalama yıllık getirisi"
+        tests:
+          - not_null
+
+      - name: avg_volatility
+        description: "Sektördeki şirketlerin ortalama volatilitesi"
+        tests:
+          - not_null
+
+      - name: avg_risk_adj_return
+        description: "Sektördeki şirketlerin ortalama risk-adjusted return'ü (Sharpe proxy)"
+        tests:
+          - not_null
+
+  - name: mart_fundamentals_vs_return
+    description: "Şirket bazında temel finansal göstergeler ve yıllık getiri. Fundamentals ile hisse performansı arasındaki ilişkiyi analiz etmek için kullanılır."
+    columns:
+      - name: company_name
+        description: "Şirket adı"
+        tests:
+          - not_null
+
+      - name: stock_year
+        description: "Yıl"
+        tests:
+          - not_null
+
+      - name: yearly_return
+        description: "Yıllık hisse getirisi"
+        tests:
+          - not_null
+
+      - name: eps
+        description: "Hisse başına kazanç (Earnings Per Share)"
+
+      - name: gross_margin
+        description: "Brüt kar marjı (yüzde)"
+
+      - name: debt_to_equity
+        description: "Uzun vadeli borç / özkaynak oranı"
