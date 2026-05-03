@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from datetime import datetime
 import os
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -23,9 +24,6 @@ def upload_to_s3():
         file_path = os.path.join(DOWNLOAD_PATH, file_name)
         s3_client.upload_file(file_path, 'nyse-market-pipeline-raw-data', file_name)
         print(f"Uploaded {file_name} to S3")    
-
-def run_dbt():
-    pass
 
 with DAG(
     dag_id="nyse_pipeline",
@@ -67,9 +65,14 @@ with DAG(
         dag=dag
     )
 
-    run_dbt_task = PythonOperator(
+    run_dbt_task = BashOperator(
         task_id="run_dbt",
-        python_callable=run_dbt
+        bash_command=(
+            "cd /opt/airflow/dbt/nyse_market_pipeline && "
+            "/home/airflow/dbt-venv/bin/dbt run && "
+            "/home/airflow/dbt-venv/bin/dbt test"
+        ),
+        dag=dag
     )
 
 
