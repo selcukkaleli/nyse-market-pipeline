@@ -68,7 +68,7 @@ The trade-off is that the data ends in 2016, so this is a backtest pipeline rath
 
 A few real problems surfaced during development that shaped the design:
 
-**Row explosion on payment joins.** The fundamentals table has multiple rows per company (one per fiscal period). A naive join blew up the price-level table by 4–5×. **Fix:** aggregate fundamentals to one row per company-year *before* joining, using window functions in the Spark job.
+**Row explosion on fundamentals joins.** The fundamentals table has multiple rows per company (one per fiscal period). A naive join blew up the price-level table by 4–5×. **Fix:** aggregate fundamentals to one row per company-year *before* joining, using window functions in the Spark job.
 
 **Missing fundamentals.** Not every company has fundamentals every year — some appear in price data but were missing EPS or gross margin entries. Visible in the dashboard's "Top Performers" table where you'll see `None` for some companies.  **Decision:** keep the rows, let `null` propagate. The mart's purpose is exploration, not enforcing a strict schema.
 
@@ -151,7 +151,7 @@ The whole pipeline runs on AWS free tier or near-zero spend. Specifically:
 Three deliberate cost-control choices in the architecture:
 
 1. **Parquet over CSV.** The Spark output is partitioned Parquet, which Athena scans columnarly. A query on `mart_sector_performance` reads kilobytes, not megabytes.
-2. **Partition + cluster on the enriched table.** Partitioned by month on `order_purchase_timestamp`, clustered by sector. Athena prunes partitions before scanning.
+2. **Partition on the enriched table.** The Spark output is partitioned by `stock_year`. Athena prunes irrelevant year partitions before scanning, reducing bytes read on year-filtered queries.
 3. **Athena workgroup with query result encryption** — keeps results in a single bucket with lifecycle rules for cleanup.
 
 If this scaled to live tick data (terabytes/day), I'd add Athena query result caching and consider switching marts to Iceberg for time-travel and compaction.
